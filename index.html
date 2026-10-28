@@ -9,6 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="股票记账">
 <meta name="application-name" content="股票记账">
+<meta name="app-build" content="v4 · 2026-10-29">
 <link rel="apple-touch-icon" sizes="180x180" href="app-icon.png">
 <link rel="icon" type="image/png" sizes="180x180" href="app-icon.png">
 <title>股票记账 · 分红计划</title>
@@ -185,6 +186,44 @@ button.ghost{border:0;background:var(--chip);border-radius:12px;padding:10px 16p
   max-width:86vw;text-align:center}
 .toast.on{opacity:.95}
 .hidden{display:none !important}
+
+/* 可点卡片 */
+.stock{cursor:pointer;transition:transform .12s ease}
+.stock:active{transform:scale(.985)}
+.chev{flex:0 0 auto;color:#C6CAD2;display:flex;align-items:center}
+.chev svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.3;
+  stroke-linecap:round;stroke-linejoin:round}
+
+/* 股票详情 */
+.dhero{padding:15px 14px 13px}
+.dhero .top{display:flex;align-items:center;gap:10px}
+.dhero .px{font-size:26px;font-weight:700;letter-spacing:-.6px;
+  font-variant-numeric:tabular-nums;margin-top:10px;line-height:1.15}
+.dhero .px small{font-size:12px;font-weight:500;color:var(--sub);margin-left:8px;letter-spacing:0}
+.dgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}
+.dgrid>div{background:var(--orange-soft);border-radius:12px;padding:8px 3px;text-align:center;min-width:0}
+.dgrid .k{display:block;font-size:10px;color:#A9764A;margin-bottom:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dgrid .v{font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.actrow{display:flex;gap:8px;margin-top:13px}
+.actrow button{flex:1;border:0;border-radius:12px;padding:11px 0;font-size:14px;font-weight:600;
+  font-family:inherit;cursor:pointer;background:var(--chip);color:var(--text)}
+.actrow button.main{background:linear-gradient(135deg,#FFA855,#F5822C);color:#fff;
+  box-shadow:0 6px 14px rgba(245,130,44,.3)}
+.listrow.tap{cursor:pointer}
+.listrow.tap:active{background:#F7F9FB}
+.zebra{font-size:10.5px;color:#B0571A;background:#FFF0E4;border-radius:6px;padding:1px 6px;margin-left:6px}
+button.danger{width:100%;border:0;border-radius:14px;padding:13px 0;font-size:15px;font-weight:600;
+  background:#FFF1EF;color:var(--up);font-family:inherit;cursor:pointer}
+button.danger.arm{background:var(--up);color:#fff}
+
+/* 新版本提示条 */
+.vbar{position:fixed;left:0;right:0;top:0;z-index:70;background:#14171F;color:#fff;
+  font-size:13px;padding:10px 14px;display:flex;align-items:center;gap:10px;
+  justify-content:space-between;box-shadow:0 4px 14px rgba(0,0,0,.2)}
+.vbar button{border:0;background:#fff;color:#14171F;border-radius:12px;padding:7px 14px;
+  font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
 </style>
 </head>
 <body>
@@ -239,7 +278,36 @@ button.ghost{border:0;background:var(--chip);border-radius:12px;padding:10px 16p
     <div class="row"><label>备注</label><input id="fNote" placeholder="可不填"></div>
     <div class="fee" id="feeBox">费用预估：-</div>
     <button class="primary" id="btnSubmit">提交到云端队列</button>
-    <div class="hint" style="margin-top:10px" id="submitHint">提交后：电脑开机或每日 15:10 任务会自动入账（价格留空时按入账时最新价），入账后刷新本页即可看到最新持仓。</div>
+    <div class="hint" style="margin-top:10px" id="submitHint">提交后：云端每天 15:05 自动入账（也可以点「立即更新云端」马上处理），入账后刷新本页即可看到最新持仓。</div>
+  </div>
+</div>
+
+<!-- 修正 / 删除 流水 -->
+<div class="sheet" id="editSheet">
+  <div class="hd"><b id="editTitle">修正这笔流水</b><button class="ghost" id="btnEditClose">关闭</button></div>
+  <div class="bd">
+    <div class="hint" id="editSub" style="margin-bottom:2px">—</div>
+    <div id="editForm">
+      <div class="seg" id="segEType">
+        <button data-et="买入" class="on">买入</button>
+        <button data-et="卖出">卖出</button>
+        <button data-et="分红">分红</button>
+      </div>
+      <div class="row"><label id="eLblShares">股数</label><input id="eShares" type="number" inputmode="decimal"></div>
+      <div class="row"><label id="eLblPrice">价格</label><input id="ePrice" type="number" inputmode="decimal" step="0.001"></div>
+      <div class="row"><label>日期</label><input id="eDate" type="date"></div>
+      <div class="row"><label>备注</label><input id="eNote"></div>
+      <div class="fee" id="eFee">—</div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:12px" id="editBtns">
+      <button class="primary" id="btnEditSave" style="flex:1">保存修正</button>
+      <button class="ghost" id="btnEditDel" style="color:var(--up)">删除</button>
+    </div>
+    <div style="margin-top:12px" class="hidden" id="editCancelWrap">
+      <button class="danger" id="btnEditCancel">撤销这笔交易</button>
+      <div class="hint" style="margin-top:8px">撤销后这笔不会入账，也不需要电脑参与。</div>
+    </div>
+    <div class="warnbox" id="eWarn">修正/删除会同步调整这只股票的持仓股数、每股成本与已分红。提交后自动触发云端入账，约 1-2 分钟后刷新即可看到。</div>
   </div>
 </div>
 
@@ -360,8 +428,10 @@ function computeFee(type, amount, code){
   return { fee: fee, note: parts.join('+') };
 }
 function newId(){ return 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+function nowStr(){ return new Date().toISOString().slice(0,19).replace('T',' '); }
 
-function submitTrade(trade){
+/* 往云端队列追加一条(交易或修正操作)。op 缺省 = add */
+function pushQueue(item){
   var c = loadCfg();
   if (!cfgReady(c)) return Promise.reject(new Error('请先完成连接设置'));
   var attempt = 0;
@@ -372,7 +442,7 @@ function submitTrade(trade){
       if (cur && cur.text && cur.text.trim()) { try { q = JSON.parse(cur.text); } catch(e){ q = null; } }
       if (!q) q = { version: 1, updatedAt: '', trades: [] };
       if (!Array.isArray(q.trades)) q.trades = [];
-      q.trades.push(trade);
+      q.trades.push(item);
       q.updatedAt = new Date().toISOString();
       return ghPut(c, QUEUE, JSON.stringify(q, null, 1), cur ? cur.sha : '').then(function(){ return q; });
     }).catch(function(err){
@@ -383,8 +453,11 @@ function submitTrade(trade){
   return tryOnce();
 }
 
+function submitTrade(trade){ return pushQueue(trade); }
+
 /* ============ 状态 ============ */
-var state = { snap:null, queue:null, stocks:[], ledger:[], T:null, divs:[], sortK:'annualTotal', ledType:'all' };
+var state = { snap:null, queue:null, stocks:[], ledger:[], T:null, divs:[], sortK:'annualTotal', ledType:'all',
+              curHash:'', prevHash:'' };
 
 function applySnapshot(snapshot){
   state.snap = snapshot;
@@ -392,9 +465,11 @@ function applySnapshot(snapshot){
   var ledger = (snapshot && snapshot.ledger) ? snapshot.ledger : [];
   var TODAY = parseDay(snapshot && snapshot.generated) || new Date();
 
-  ledger.forEach(function(e){
+  ledger.forEach(function(e, i){
     e.shares = num(e.shares); e.price = num(e.price); e.amount = num(e.amount); e.fee = num(e.fee);
     e._d = parseDay(e.date);
+    e._i = i;                                  // 在 state.ledger 里的下标(用于点击定位)
+    e.row = (e.row == null || e.row === '') ? null : num(e.row);   // Excel 行号(云端新版本快照才有)
   });
 
   stocks.forEach(function(s){
@@ -432,6 +507,157 @@ function applySnapshot(snapshot){
   state.T = T;
 }
 
+/* ============ 实时行情 (JSONP, 手机自己拉, 不需要电脑) ============ */
+var quoteState = { live:false, at:'', tried:false };
+
+function secidOf(code){
+  var c = String(code||'').toLowerCase();
+  if (c.indexOf('sh') === 0) return '1.' + c.slice(2);
+  if (c.indexOf('sz') === 0) return '0.' + c.slice(2);
+  if (c.indexOf('bj') === 0) return '0.' + c.slice(2);
+  return '';
+}
+
+var jsonpSeq = 0;
+function jsonp(url, timeoutMs){
+  return new Promise(function(resolve, reject){
+    var name = 'cb_q' + (++jsonpSeq) + '_' + Date.now().toString(36);
+    var done = false;
+    function cleanup(){
+      try { delete window[name]; } catch(e){ window[name] = undefined; }
+      var el = document.getElementById(name);
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+      clearTimeout(timer);
+    }
+    var timer = setTimeout(function(){ if (done) return; done = true; cleanup(); reject(new Error('超时')); }, timeoutMs || 6000);
+    window[name] = function(data){ if (done) return; done = true; cleanup(); resolve(data); };
+    var s = document.createElement('script');
+    s.id = name;
+    s.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'cb=' + name;
+    s.onerror = function(){ if (done) return; done = true; cleanup(); reject(new Error('网络错误')); };
+    (document.head || document.body).appendChild(s);
+  });
+}
+
+// 东财 push2: f43 是放大 100 倍的整数(42.52 -> 4252)
+function fetchOneQuote(stock){
+  var sid = secidOf(stock.code);
+  if (!sid) return Promise.reject(new Error('无法识别代码'));
+  var url = 'https://push2.eastmoney.com/api/qt/stock/get?secid=' + sid + '&fields=f43,f57,f58';
+  return jsonp(url, 6000).then(function(j){
+    if (!j || !j.data) throw new Error('无数据');
+    var raw = Number(j.data.f43);
+    if (!isFinite(raw) || raw <= 0) throw new Error('价格无效');
+    return Math.round(raw) / 100;
+  });
+}
+
+// 只重算"依赖价格"的派生指标, 不动台账相关字段
+function applyLiveQuotes(){
+  var T = {costValue:0, marketValue:0, profit:0, divReceived:0, originalCost:0, priceGain:0, annualTotal:0};
+  state.stocks.forEach(function(s){
+    s.costValue = s.shares * s.cost;
+    s.originalCost = s.costValue + s.divReceived;
+    s.marketValue = s.shares * s.price;
+    s.profit = s.marketValue - s.costValue;
+    s.profitPct = s.costValue ? s.profit / s.costValue : 0;
+    s.priceGain = s.marketValue - s.originalCost;
+    s.priceGainPct = s.originalCost ? s.priceGain / s.originalCost : 0;
+    s.vsCostPct = s.cost ? (s.price - s.cost) / s.cost : 0;
+    s.remaining = s.costValue;
+    s.paybackPct = s.originalCost ? s.divReceived / s.originalCost * 100 : 0;
+    s.paybackYears = s.annualTotal > 0 ? s.remaining / s.annualTotal : null;
+  });
+  state.stocks.forEach(function(s){ for (var k in T) T[k] += num(s[k]); });
+  T.profitPct = T.costValue ? T.profit / T.costValue : 0;
+  T.priceGainPct = T.originalCost ? T.priceGain / T.originalCost : 0;
+  T.paybackPct = T.originalCost ? T.divReceived / T.originalCost * 100 : 0;
+  state.T = T;
+}
+
+function fetchQuotes(){
+  var list = state.stocks.filter(function(s){ return secidOf(s.code); });
+  if (!list.length) return Promise.resolve(false);
+  var ok = 0;
+  return Promise.all(list.map(function(s){
+    return fetchOneQuote(s).then(function(p){
+      s.priceLive = p; s.price = p; ok++;
+      return true;
+    }).catch(function(){ return false; });
+  })).then(function(){
+    quoteState.tried = true;
+    if (ok === 0) { quoteState.live = false; return false; }
+    quoteState.live = true;
+    var d = new Date();
+    quoteState.at = (d.getMonth()+1) + '.' + d.getDate() + ' ' + ('0'+d.getHours()).slice(-2) + ':' + ('0'+d.getMinutes()).slice(-2);
+    applyLiveQuotes();
+    return true;
+  });
+}
+
+// 让云端立刻跑一次 (GitHub Actions workflow_dispatch)
+function triggerCloudRun(btn){
+  var c = loadCfg();
+  if (!cfgReady(c)) { toast('请先在「设置」里填写连接信息'); return; }
+  if (btn) { btn.disabled = true; btn.textContent = '触发中...'; }
+  var url = 'https://api.github.com/repos/' + encodeURIComponent(c.owner) + '/' + encodeURIComponent(c.repo)
+    + '/actions/workflows/daily.yml/dispatches';
+  fetch(url, {
+    method: 'POST',
+    headers: Object.assign(ghHeaders(c), { 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ ref: c.branch || 'main' })
+  }).then(function(r){
+    if (r.status === 204) {
+      toast('已触发云端任务，约 1-2 分钟后刷新即可看到结果');
+      setTimeout(function(){ refreshData(); }, 75000);
+      return null;
+    }
+    return r.text().then(function(t){
+      if (r.status === 403 || r.status === 404) {
+        throw new Error('触发失败(HTTP ' + r.status + ')：Token 需要 workflow 权限，请重新生成 token 并勾选 repo + workflow');
+      }
+      throw new Error('触发失败 HTTP ' + r.status + ' ' + String(t).slice(0, 80));
+    });
+  }).catch(function(e){ toast(e.message); })
+    .then(function(){ if (btn) { btn.disabled = false; btn.textContent = '立即更新云端'; } });
+}
+
+/* ============ 版本 ============ */
+var BUILD = 'v4 · 2026-10-29';
+try {
+  var bm = document.querySelector('meta[name="app-build"]');
+  if (bm && bm.getAttribute('content')) BUILD = bm.getAttribute('content');
+} catch(e){ }
+
+// 手机端浏览器/主屏图标会缓存旧页面, 这里主动比对线上最新版本, 不一致就提示刷新
+function checkNewVersion(){
+  try {
+    if (typeof fetch !== 'function') return;
+    fetch('index.html?ts=' + Date.now(), { cache: 'no-store' }).then(function(r){
+      return r.ok ? r.text() : '';
+    }).then(function(t){
+      var m = /<meta name="app-build" content="([^"]*)"/.exec(String(t || ''));
+      if (!m) return;
+      var online = (m[1] || '').trim();
+      if (online && online !== BUILD) showUpdateBar(online);
+    }).catch(function(){ });
+  } catch(e){ }
+}
+function showUpdateBar(online){
+  try {
+    if (document.getElementById('vbar')) return;
+    var bar = document.createElement('div');
+    bar.className = 'vbar';
+    bar.id = 'vbar';
+    bar.innerHTML = '<span>发现新版本 ' + esc(online) + '（当前 ' + esc(BUILD) + '）</span>' +
+                    '<button id="btnVBar">立即刷新</button>';
+    document.body.appendChild(bar);
+    document.getElementById('btnVBar').onclick = function(){
+      location.replace('index.html?v=' + Date.now());
+    };
+  } catch(e){ }
+}
+
 /* ============ 顶栏 ============ */
 function setBar(title, sub){
   $('pageTitle').textContent = title;
@@ -454,12 +680,13 @@ var SORTS = [
 function stockCard(s){
   var w = Math.min(100, Math.max(0, s.paybackPct));
   return '' +
-    '<div class="card stock">' +
+    '<div class="card stock" data-code="' + esc(s.code) + '" role="button" tabindex="0">' +
       '<div class="srow1">' +
         '<div class="avatar">' + esc(avatarOf(s.name)) + '</div>' +
         '<div class="sname"><b>' + esc(s.name) + '</b>' +
           '<span>' + esc(s.code) + ' · ' + sharesFmt(s.shares) + '股</span></div>' +
         '<div class="shero"><b>' + money(s.annualTotal) + '</b><span>预测年分红</span></div>' +
+        '<span class="chev"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>' +
       '</div>' +
       '<div class="metrics">' +
         '<div><span class="k">现股价</span><span class="v">¥' + priceFmt(s.price) + '</span></div>' +
@@ -475,8 +702,11 @@ function stockCard(s){
 
 function renderHome(){
   var T = state.T || {costValue:0,marketValue:0,profit:0,profitPct:0,divReceived:0,annualTotal:0,paybackPct:0};
-  var quote = (state.snap && state.snap.quoteDate) ? state.snap.quoteDate : '—';
-  setBar('我的持仓', '共 ' + state.stocks.length + ' 只 · 行情 ' + quote);
+  var quoteLine;
+  if (quoteState.live) quoteLine = '实时 ' + quoteState.at;
+  else if (state.snap && state.snap.quoteDate) quoteLine = '收盘价 ' + state.snap.quoteDate;
+  else quoteLine = '—';
+  setBar('我的持仓', '共 ' + state.stocks.length + ' 只 · ' + quoteLine);
 
   var pending = pendingTrades();
   var pendCard = '';
@@ -488,10 +718,10 @@ function renderHome(){
       '</div>';
   } else if (pending.length){
     pendCard = '<div class="pendbox">' +
-      '有 <b>' + pending.length + '</b> 笔交易等待电脑入账' +
-      '<div class="ln">' + pending.slice(0,3).map(function(t){ return esc(t.type + ' ' + (t.name||t.code) + ' ' + sharesFmt(t.shares)); }).join('；') +
+      '有 <b>' + pending.length + '</b> 笔操作等待云端入账' +
+      '<div class="ln">' + pending.slice(0,3).map(function(t){ return esc(opName(t) + ' ' + (t.name||t.code) + ' ' + sharesFmt(t.shares)); }).join('；') +
       (pending.length > 3 ? ' …' : '') + '</div>' +
-      '<div class="ln">电脑开机或每日 15:10 任务后自动入账，之后点右上角刷新即可看到。</div>' +
+      '<div class="ln">到「流水」页点一下可以撤销；云端每 15:05 或点「立即更新」后自动入账。</div>' +
       '</div>';
   }
 
@@ -527,8 +757,18 @@ function renderHome(){
   for (var i=0;i<cs.length;i++){
     cs[i].addEventListener('click', function(){ state.sortK = this.getAttribute('data-sort'); renderHome(); });
   }
+  bindStockCards();
   var gs = $('btnGoSetup');
   if (gs) gs.addEventListener('click', function(){ location.hash = '#/me'; renderMe(); });
+}
+
+function bindStockCards(){
+  var cards = $('view').querySelectorAll('.stock[data-code]');
+  for (var i=0;i<cards.length;i++){
+    cards[i].addEventListener('click', function(){
+      location.hash = '#/s/' + encodeURIComponent(this.getAttribute('data-code'));
+    });
+  }
 }
 
 /* ============ 视图: 分红 ============ */
@@ -546,7 +786,7 @@ function renderDiv(){
     var sum = arr.reduce(function(a,e){ return a + num(e.amount); }, 0);
     var items = arr.map(function(e){
       var d2 = (e.shares ? sharesFmt(e.shares)+'股' : '') + (e.price ? ' · 每股 '+priceFmt(e.price) : '');
-      return '<div class="listrow">' +
+      return '<div class="listrow tap" data-ledi="' + e._i + '">' +
         '<div class="avatar" style="width:32px;height:32px;border-radius:10px;font-size:14px">' + esc(avatarOf(e.name)) + '</div>' +
         '<div class="mid"><div class="t1">' + esc(e.name||e.code) + '</div>' +
         '<div class="t2">' + esc(e.date||'') + (d2?' · '+esc(d2):'') + (e.note?' · '+esc(e.note):'') + '</div></div>' +
@@ -559,6 +799,7 @@ function renderDiv(){
   $('view').innerHTML = (body || '<div class="empty">暂无分红记录</div>') +
     '<div class="rows"><div class="totalbar"><span>合计 ' + list.length + ' 笔</span>' +
     '<b class="orange">' + money(list.reduce(function(a,e){ return a + num(e.amount); },0)) + '</b></div></div>';
+  bindLedgerRows();
 }
 
 /* ============ 视图: 流水 ============ */
@@ -577,7 +818,7 @@ function renderLed(){
     var typ = String(e.type||'');
     var tagCls = typ.indexOf('买入')>=0 ? 'blue' : (typ.indexOf('卖出')>=0 ? 'orange' : 'green');
     var d1 = (e.shares ? sharesFmt(e.shares)+'股' : '') + (e.price ? ' @'+priceFmt(e.price) : '');
-    return '<div class="listrow"><div class="mid">' +
+    return '<div class="listrow tap" data-ledi="' + e._i + '"><div class="mid">' +
       '<div class="t1"><span class="tag ' + tagCls + '">' + esc(typ) + '</span>' + esc(e.name||e.code) + '</div>' +
       '<div class="t2">' + esc(e.date||'') + (d1?' · '+esc(d1):'') +
         (e.fee?' · 费用 '+money(e.fee):'') + (e.note?' · '+esc(e.note):'') + '</div></div>' +
@@ -586,16 +827,308 @@ function renderLed(){
 
   var sumAmt = rows.reduce(function(a,e){ return a + num(e.amount); },0);
   var sumFee = rows.reduce(function(a,e){ return a + num(e.fee); },0);
-  $('view').innerHTML = '<div class="sortrow" style="margin-top:6px">' + chips + '</div>' +
-    '<div class="rows">' + (items || '<div class="empty">暂无流水</div>') + '</div>' +
+
+  // 还没入账的操作: 点一下可以撤销
+  var pend = pendingTrades();
+  var pendHtml = '';
+  if (pend.length){
+    pendHtml = '<div class="sec-title"><span>还没入账</span><span>点一下可撤销</span></div><div class="rows">' +
+      pend.map(function(t, k){
+        var o = String(t.op||'add').toLowerCase();
+        var lb = o === 'fix' ? '修正' : (o === 'void' ? '删除流水' : (o === 'cancel' ? '撤销' : (t.type||'交易')));
+        var tg = t.target ? (t.target.name||t.target.code) : '';
+        var nm = t.name || tg;
+        if (!nm && t.targetId){
+          var arr = (state.queue && state.queue.trades) ? state.queue.trades : [];
+          for (var z=0; z<arr.length; z++){ if (arr[z] && arr[z].id === t.targetId){ nm = arr[z].name || arr[z].code; break; } }
+        }
+        if (!nm) nm = t.code || '';
+        var d3 = t.target ? (String(t.target.date||'') + ' ' + sharesFmt(t.target.shares) + '股') :
+                            (String(t.date||'') + ' ' + sharesFmt(t.shares) + '股' + (t.price ? ' @'+priceFmt(t.price) : ''));
+        return '<div class="listrow tap" data-pendi="' + k + '"><div class="mid">' +
+          '<div class="t1"><span class="tag orange">' + esc(lb) + '</span>' + esc(nm) + '</div>' +
+          '<div class="t2">' + esc(d3) + (t.note ? ' · ' + esc(t.note) : '') + '</div></div>' +
+          '<div class="amt muted" style="font-size:12.5px">待处理</div></div>';
+      }).join('') + '</div>';
+  }
+
+  $('view').innerHTML = pendHtml +
+    '<div class="sortrow" style="margin-top:6px">' + chips + '</div>' +
+    '<div class="rows">' + (items || '<div class="empty" style="box-shadow:none">暂无流水</div>') + '</div>' +
     '<div class="rows" style="margin-top:12px">' +
       '<div class="totalbar"><span>合计 ' + rows.length + ' 笔</span><b>' + money(sumAmt) + '</b></div>' +
       '<div class="totalbar" style="border-top:1px solid var(--line)"><span>费用合计</span><b>' + money(sumFee) + '</b></div>' +
-    '</div>';
+    '</div>' +
+    '<div class="hint" style="margin:14px 4px 0">点任意一行可以修正或删除这笔流水；还没入账的可以在上面撤销。</div>';
   var cs = $('view').querySelectorAll('[data-ltype]');
   for (var i=0;i<cs.length;i++){
     cs[i].addEventListener('click', function(){ state.ledType = this.getAttribute('data-ltype'); renderLed(); });
   }
+  bindLedgerRows();
+}
+
+function bindLedgerRows(){
+  var els = $('view').querySelectorAll('[data-ledi]');
+  for (var i=0;i<els.length;i++){
+    els[i].addEventListener('click', function(){
+      var e = state.ledger[num(this.getAttribute('data-ledi'))];
+      if (e) openEditLedger(e);
+    });
+  }
+  var ps = $('view').querySelectorAll('[data-pendi]');
+  for (var j=0;j<ps.length;j++){
+    ps[j].addEventListener('click', function(){
+      var arr = pendingTrades();
+      var t = arr[num(this.getAttribute('data-pendi'))];
+      if (t) openEditPending(t);
+    });
+  }
+}
+
+/* ============ 视图: 股票详情 ============ */
+function findStock(code){
+  var c = String(code||'');
+  for (var i=0;i<state.stocks.length;i++) if (String(state.stocks[i].code) === c) return state.stocks[i];
+  return null;
+}
+function ledgerOf(code){
+  var c = String(code||'');
+  return state.ledger.filter(function(e){ return String(e.code) === c; });
+}
+
+function renderStock(code){
+  var s = findStock(code);
+  if (!s){
+    setBar('股票详情', '');
+    $('view').innerHTML = '<div class="empty">找不到 ' + esc(code) + ' 的持仓<br>可能还没入账，或者已经清仓</div>';
+    return;
+  }
+  var ql = quoteState.live ? ('实时 ' + quoteState.at)
+         : (state.snap && state.snap.quoteDate ? ('收盘价 ' + state.snap.quoteDate) : '');
+  setBar(s.name, s.code + ' · ' + sharesFmt(s.shares) + '股' + (ql ? ' · ' + ql : ''));
+
+  var mine = ledgerOf(s.code).slice().sort(function(a,b){ return String(b.date||'').localeCompare(String(a.date||'')); });
+  var divCnt = mine.filter(function(e){ return String(e.type||'').indexOf('分红') >= 0; }).length;
+  var vsCost = s.cost ? (s.price - s.cost) / s.cost : 0;
+  var netInvest = num(s.originalCost);
+
+  function kv(k, v, cls){ return '<div class="row2"><span class="k">' + k + '</span><span class="v ' + (cls||'') + '">' + v + '</span></div>'; }
+
+  var html = '' +
+    '<section class="card dhero" style="margin-top:6px">' +
+      '<div class="top">' +
+        '<div class="avatar">' + esc(avatarOf(s.name)) + '</div>' +
+        '<div class="sname"><b>' + esc(s.name) + '</b><span>' + esc(s.code) + ' · ' + sharesFmt(s.shares) + ' 股</span></div>' +
+        '<div class="shero"><b class="' + signCls(s.profit) + '">' + moneyS(s.profit) + '</b><span>浮动盈亏</span></div>' +
+      '</div>' +
+      '<div class="px">¥' + priceFmt(s.price) +
+        '<small class="' + signCls(vsCost) + '">' + pctS(vsCost) + ' vs 成本</small></div>' +
+      '<div class="dgrid">' +
+        '<div><span class="k">成本市值</span><span class="v">' + money(s.costValue) + '</span></div>' +
+        '<div><span class="k">目前市值</span><span class="v">' + money(s.marketValue) + '</span></div>' +
+        '<div><span class="k">累计分红</span><span class="v orange">' + money(s.divReceived) + '</span></div>' +
+        '<div><span class="k">预测年分红</span><span class="v orange">' + money(s.annualTotal) + '</span></div>' +
+        '<div><span class="k">净投入</span><span class="v">' + money(netInvest) + '</span></div>' +
+        '<div><span class="k">每股成本</span><span class="v">¥' + priceFmt(s.cost) + '</span></div>' +
+      '</div>' +
+      '<div class="pb" style="margin-top:13px"><div class="track">' +
+        '<i style="width:' + Math.min(100, Math.max(0, s.paybackPct)).toFixed(2) + '%"></i></div>' +
+        '<span class="t">回本 ' + s.paybackPct.toFixed(2) + '%</span></div>' +
+      '<div class="actrow">' +
+        '<button class="main" data-act="买入">买入</button>' +
+        '<button data-act="卖出">卖出</button>' +
+        '<button data-act="分红">记分红</button>' +
+      '</div>' +
+    '</section>' +
+    '<div class="sec-title"><span>关键指标</span></div>' +
+    '<div class="rows">' +
+      kv('股息率', pctP(s.yieldPct), 'orange') +
+      kv('成本息率', pctP(s.costYieldPct), 'orange') +
+      kv('盈亏率', pctS(s.profitPct), signCls(s.profitPct)) +
+      kv('剩余待回收', money(s.remaining)) +
+      kv('预计回本年', (s.paybackYears != null ? s.paybackYears.toFixed(2) + ' 年' : '—')) +
+      kv('持仓天数', (s.holdDays != null ? s.holdDays + ' 天' : '—')) +
+      kv('流水 / 分红', mine.length + ' 笔 / ' + divCnt + ' 笔') +
+    '</div>' +
+    '<div class="sec-title"><span>流水台账</span><span>点一下可修正</span></div>' +
+    '<div class="rows">' + (mine.length ? mine.map(function(e){
+      var typ = String(e.type||'');
+      var tagCls = typ.indexOf('买入')>=0 ? 'blue' : (typ.indexOf('卖出')>=0 ? 'orange' : 'green');
+      var d1 = (e.shares ? sharesFmt(e.shares)+'股' : '') + (e.price ? ' @'+priceFmt(e.price) : '');
+      return '<div class="listrow tap" data-ledi="' + e._i + '"><div class="mid">' +
+        '<div class="t1"><span class="tag ' + tagCls + '">' + esc(typ) + '</span>' + esc(e.date||'') + '</div>' +
+        '<div class="t2">' + esc(d1) + (e.fee?' · 费用 '+money(e.fee):'') + (e.note?' · '+esc(e.note):'') + '</div></div>' +
+        '<div class="amt' + (typ.indexOf('分红')>=0?' orange':'') + '">' + money(e.amount) + '</div></div>';
+    }).join('') : '<div class="empty" style="box-shadow:none">这只股票还没有流水</div>') + '</div>' +
+    '<div class="hint" style="margin:12px 4px 0">点任意一行可以修正股数/价格/日期，或直接删掉这笔；改完云端会自动重算持仓与成本。</div>';
+
+  $('view').innerHTML = html;
+  bindLedgerRows();
+  var acts = $('view').querySelectorAll('[data-act]');
+  for (var i=0;i<acts.length;i++){
+    acts[i].addEventListener('click', function(){
+      openSheet(s.code, this.getAttribute('data-act'));
+    });
+  }
+}
+
+/* ============ 修正 / 删除 流水 ============ */
+var editTarget = null;      // { mode:'ledger', entry } | { mode:'pending', trade }
+var editType = '买入';
+var armTimer = null;
+
+function targetOf(e){
+  return { row: (e.row == null ? null : e.row), code: e.code, name: e.name,
+           type: e.type, date: e.date, shares: num(e.shares), price: num(e.price) };
+}
+
+function openEditLedger(e){
+  if (!cfgReady(loadCfg())) { toast('请先在「设置」里填写连接信息'); return; }
+  editTarget = { mode: 'ledger', entry: e };
+  var typ = String(e.type||'');
+  editType = typ.indexOf('卖出')>=0 ? '卖出' : (typ.indexOf('分红')>=0 ? '分红' : '买入');
+  $('editTitle').textContent = '修正这笔流水';
+  $('editSub').textContent = (e.date||'') + ' · ' + (e.name||e.code) + ' · ' + (e.type||'');
+  $('editForm').classList.remove('hidden');
+  $('editBtns').classList.remove('hidden');
+  $('editCancelWrap').classList.add('hidden');
+  $('eWarn').classList.remove('hidden');
+  $('eShares').value = (e.shares ? e.shares : '');
+  $('ePrice').value = (e.price ? e.price : '');
+  $('eDate').value = String(e.date||'').slice(0,10);
+  $('eNote').value = e.note || '';
+  setEType(editType);
+  disarm($('btnEditDel'), '删除');
+  $('btnEditSave').disabled = false;
+  $('btnEditSave').textContent = '保存修正';
+  $('editSheet').classList.add('on');
+}
+
+function openEditPending(t){
+  editTarget = { mode: 'pending', trade: t };
+  $('editTitle').textContent = '这笔还没入账';
+  $('editSub').textContent = opName(t) + ' · ' + (t.name||t.code) + (t.shares ? ' · ' + sharesFmt(t.shares) + '股' : '') +
+    (t.price ? ' @' + priceFmt(t.price) : '') + (t.date ? ' · ' + t.date : '');
+  $('editForm').classList.add('hidden');
+  $('editBtns').classList.add('hidden');
+  $('editCancelWrap').classList.remove('hidden');
+  $('eWarn').classList.add('hidden');
+  disarm($('btnEditCancel'), '撤销这笔交易');
+  $('editSheet').classList.add('on');
+}
+
+function closeEdit(){
+  $('editSheet').classList.remove('on');
+  editTarget = null;
+}
+
+function setEType(t){
+  editType = t;
+  var bs = document.querySelectorAll('#segEType button');
+  for (var i=0;i<bs.length;i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-et') === t);
+  updateEditFee();
+}
+
+function updateEditFee(){
+  if (!editTarget || editTarget.mode !== 'ledger') return;
+  var sh = num($('eShares').value);
+  var px = num($('ePrice').value);
+  var e = editTarget.entry;
+  var code = e.code || '';
+  if (editType === '分红'){
+    $('eLblShares').textContent = '持股数';
+    $('eLblPrice').textContent = '每股派息';
+    $('eFee').innerHTML = (!sh || !px) ? '分红入账 = 股数 × 每股派息，同时摊薄每股成本；无交易费用。'
+      : '分红入账 <b>' + money(Math.round(sh*px*100)/100) + '</b>（' + sharesFmt(sh) + '股 × 每股 ' + priceFmt(px) + '），同时把每股成本摊薄 ' + priceFmt(px) + ' 元。';
+  } else {
+    $('eLblShares').textContent = '股数';
+    $('eLblPrice').textContent = '价格';
+    if (!sh || !px){ $('eFee').textContent = '填写股数和价格后自动计算费用'; }
+    else {
+      var amt = Math.round(sh*px*100)/100;
+      var f = computeFee(editType, amt, code);
+      $('eFee').innerHTML = '成交额 ' + money(amt) + '，费用 <b>' + money(f.fee) + '</b>（' + esc(f.note) + '）';
+    }
+  }
+}
+
+/* 危险按钮两段式确认: 第一下变成"再按一次", 4 秒没按就复原 */
+function disarm(btn, label){
+  if (!btn) return;
+  btn.classList.remove('arm');
+  btn.textContent = label;
+  btn._armed = false;
+}
+function armOrRun(btn, label){
+  if (!btn) return false;
+  if (!btn._armed){
+    btn._armed = true;
+    btn.classList.add('arm');
+    btn.textContent = '再按一次确认';
+    clearTimeout(armTimer);
+    armTimer = setTimeout(function(){ disarm(btn, label); }, 4000);
+    return false;
+  }
+  clearTimeout(armTimer);
+  disarm(btn, label);
+  return true;
+}
+
+function saveEdit(){
+  var t = editTarget;
+  if (!t || t.mode !== 'ledger') return;
+  var e = t.entry;
+  var sh = num($('eShares').value);
+  var px = num($('ePrice').value);
+  if (!sh || sh <= 0){ toast(editType === '分红' ? '请填持股数（分红 = 持股数 × 每股派息）' : '股数要大于 0'); return; }
+  if (!px || px <= 0){ toast(editType === '分红' ? '每股派息要大于 0' : '价格要大于 0'); return; }
+  var d = $('eDate').value || String(e.date||'').slice(0,10);
+  var note = $('eNote').value.trim();
+  var same = (editType === String(e.type||'')) &&
+             Math.abs(sh - num(e.shares)) < 1e-6 &&
+             Math.abs(px - num(e.price)) < 1e-6 &&
+             d === String(e.date||'').slice(0,10) &&
+             note === String(e.note||'');
+  if (same){ toast('内容没有改动'); return; }
+  if (editType === '卖出'){
+    var s = findStock(e.code);
+    if (s && sh > num(s.shares) + 1e-6){ toast('卖出股数超过当前持仓 ' + sharesFmt(s.shares) + ' 股'); return; }
+  }
+  var op = { id: newId(), op: 'fix', at: nowStr(), target: targetOf(e),
+             newType: editType, newShares: sh, newPrice: px, newDate: d, newNote: note };
+  submitOp(op, $('btnEditSave'), '修正');
+}
+
+function deleteEdit(){
+  var t = editTarget;
+  if (!t || t.mode !== 'ledger') return;
+  if (!armOrRun($('btnEditDel'), '删除')) return;
+  var op = { id: newId(), op: 'void', at: nowStr(), target: targetOf(t.entry) };
+  submitOp(op, $('btnEditDel'), '删除');
+}
+
+function cancelPendingTrade(){
+  var t = editTarget;
+  if (!t || t.mode !== 'pending') return;
+  if (!armOrRun($('btnEditCancel'), '撤销这笔交易')) return;
+  var op = { id: newId(), op: 'cancel', at: nowStr(), targetId: t.trade.id };
+  submitOp(op, $('btnEditCancel'), '撤销');
+}
+
+function submitOp(op, btn, label){
+  var old = btn ? btn.textContent : '';
+  if (btn){ btn.disabled = true; btn.textContent = '提交中...'; }
+  pushQueue(op).then(function(q){
+    state.queue = q;
+    if (btn){ btn.disabled = false; btn.textContent = old; }
+    closeEdit();
+    toast(label + '已提交，正在触发云端处理…');
+    refreshData();
+    triggerCloudRun(null);        // 顺手让云端立刻跑一次；1-2 分钟后自动刷新
+  }).catch(function(err){
+    if (btn){ btn.disabled = false; btn.textContent = old; }
+    toast('提交失败：' + err.message);
+  });
 }
 
 /* ============ 视图: 设置 ============ */
@@ -609,7 +1142,7 @@ function renderMe(){
     '<div class="sec-title"><span>连接设置</span><span>' +
       (ready ? '<b style="color:var(--down)">已配置</b>' : '<b style="color:var(--up)">未配置</b>') + '</span></div>' +
     '<div class="rows" style="padding:12px 14px 14px">' +
-      '<div class="hint" style="margin-bottom:2px">手机录入的交易写入 GitHub 私有仓库的 queue.json；电脑开机/每日任务自动入账（含自动拉价），并把最新数据写回 snapshot.json 供本页显示。</div>' +
+      '<div class="hint" style="margin-bottom:2px">手机录入的交易和修改变动写入 GitHub 私有仓库的 queue.json；云端（GitHub Actions）每天 15:05 自动入账，并把最新数据写回 snapshot.json 供本页显示。整个过程不需要电脑开机。</div>' +
       '<div class="row"><label>用户名</label><input id="cfgOwner" placeholder="GitHub 用户名" autocapitalize="off" autocorrect="off"></div>' +
       '<div class="row"><label>仓库</label><input id="cfgRepo" placeholder="stock-data" autocapitalize="off" autocorrect="off"></div>' +
       '<div class="row"><label>分支</label><input id="cfgBranch" placeholder="main" autocapitalize="off" autocorrect="off"></div>' +
@@ -620,6 +1153,14 @@ function renderMe(){
       '</div>' +
       '<div style="margin-top:10px"><button class="ghost" id="btnClearCfg">清除本机设置</button></div>' +
       '<div class="warnbox">Token 只存在本机浏览器（localStorage），不会上传到任何地方。已经保存过的话，Token 框留空＝保持原值不变。</div>' +
+    '</div>' +
+    '<div class="sec-title"><span>云端自动更新</span><span>' + (quoteState.live ? '<b style="color:var(--down)">实时价 ' + esc(quoteState.at) + '</b>' : '') + '</span></div>' +
+    '<div class="rows" style="padding:12px 14px 14px">' +
+      '<div class="hint">不开电脑时，由 GitHub 的免费服务器每天 15:05 自动更新行情并入账。现在想立刻更新就点下面这个按钮（需要 token 带 workflow 权限）。</div>' +
+      '<div style="display:flex;gap:10px;margin-top:12px">' +
+        '<button class="primary" id="btnCloudRun" style="flex:1">立即更新云端</button>' +
+        '<button class="ghost" id="btnLiveQuote">拉实时价</button>' +
+      '</div>' +
     '</div>' +
     '<div class="sec-title"><span>数据信息</span></div>' +
     '<div class="rows">' +
@@ -637,7 +1178,7 @@ function renderMe(){
       '<div class="row2"><span class="k">分红回本进度</span><span class="v">已分红 ÷ 净投入</span></div>' +
     '</div>' +
     '<div class="hint" style="margin:16px 4px 0">新建持仓：在「＋ 记一笔」里选“新股票”，填代码+名称+股数+价格即可；电脑入账时会自动在 Excel 里插入这只股票（带公式和合计行）。</div>' +
-    '<div class="hint" style="margin:10px 4px 0;text-align:center;opacity:.7">界面版本 v2 · 2026-10-17</div>';
+    '<div class="hint" style="margin:10px 4px 0;text-align:center;opacity:.7">界面版本 ' + esc(BUILD) + '</div>';
 
   setCfgInputs(c);
   $('btnRefresh2').onclick = function(){ toast('刷新中...'); refreshData(); };
@@ -645,6 +1186,19 @@ function renderMe(){
   $('btnClearCfg').onclick = function(){
     try { localStorage.removeItem(CFG_KEY); } catch(e){}
     cfg = null; loadCfg(); renderMe(); toast('已清除本机设置');
+  };
+  var bc = $('btnCloudRun');
+  if (bc) bc.onclick = function(){ triggerCloudRun(this); };
+  var bl = $('btnLiveQuote');
+  if (bl) bl.onclick = function(){
+    var self = this;
+    self.disabled = true; self.textContent = '拉取中...';
+    toast('正在拉实时行情...');
+    fetchQuotes().then(function(got){
+      self.disabled = false; self.textContent = '拉实时价';
+      if (got) { toast('实时价已更新（' + quoteState.at + '）'); renderMe(); }
+      else toast('没拉到实时价，先看收盘价；可能是网络被拦');
+    });
   };
 }
 function setCfgInputs(c){
@@ -685,7 +1239,9 @@ function saveAndTest(){
 var formType = '买入';
 var formMode = 'hold';
 
-function openSheet(){
+function openSheet(code, type){
+  // 作为按钮回调时第一个参数是事件对象, 忽略掉
+  if (code && typeof code === 'object') { code = null; type = null; }
   if (!cfgReady(loadCfg())) { toast('请先在「设置」里填写 GitHub 连接信息'); location.hash = '#/me'; renderMe(); setupOpen = true; renderMe(); return; }
   $('sheet').classList.add('on');
   if (!state.stocks.length) refreshData();
@@ -697,7 +1253,11 @@ function openSheet(){
   $('fNewCode').value = '';
   $('fNewName').value = '';
   setMode('hold');
-  setType('买入');
+  if (code){
+    var opt = $('fStock').querySelector('option[value="' + String(code).replace(/"/g,'') + '"]');
+    if (opt) $('fStock').value = code;
+  }
+  setType(type || '买入');
   updateFee();
 }
 function closeSheet(){ $('sheet').classList.remove('on'); }
@@ -832,7 +1392,14 @@ function submitForm(){
 function pendingTrades(){
   var q = state.queue;
   var trades = (q && Array.isArray(q.trades)) ? q.trades : [];
-  return trades.filter(function(t){ return t && !t.applied; });
+  return trades.filter(function(t){ return t && !t.applied && !t.cancelled; });
+}
+function opName(t){
+  var o = String((t && t.op) || 'add').toLowerCase();
+  if (o === 'fix') return '修正';
+  if (o === 'void') return '删除';
+  if (o === 'cancel') return '撤销';
+  return '入账';
 }
 
 /* ============ 数据加载 ============ */
@@ -849,14 +1416,45 @@ function refreshData(){
     if (snap) applySnapshot(snap);
     else { state.stocks = []; state.ledger = []; state.divs = []; }
     route();
+    // 顺手拉一次实时价(手机自己拉, 不依赖电脑); 失败就继续用快照里的收盘价
+    try {
+      fetchQuotes().then(function(got){
+        if (got && (location.hash === '' || location.hash === '#/home')) route();
+      }).catch(function(){ });
+    } catch(e){ }
   });
 }
 
 /* ============ 路由 ============ */
+var ICON_GEAR = null;
+var ICON_BACK = '<svg viewBox="0 0 24 24"><path d="M14.5 5.5L8.5 12l6 6.5"/></svg>';
+
+function setLeftBtn(mode){
+  var b = $('btnSetupIcon');
+  if (!b) return;
+  if (!ICON_GEAR) ICON_GEAR = b.innerHTML;
+  if (mode === 'back'){ b.innerHTML = ICON_BACK; b.setAttribute('aria-label','返回'); b._mode = 'back'; }
+  else { b.innerHTML = ICON_GEAR; b.setAttribute('aria-label','设置'); b._mode = 'gear'; }
+}
+function goBack(){
+  var back = (state.prevHash && state.prevHash.charAt(0) === '#') ? state.prevHash : '#/home';
+  if (back === location.hash) back = '#/home';
+  location.hash = back;
+}
+
 function route(){
+  var cur = location.hash || '#/home';
+  if (state.curHash !== cur){ state.prevHash = state.curHash; state.curHash = cur; }
   var h = String(location.hash || '').replace(/^#\/?/,'');
-  var name = h.split('/').filter(function(x){ return x; })[0] || 'home';
-  if (name === 'div'){ renderDiv(); setTab('div'); }
+  var parts = h.split('/').filter(function(x){ return x; });
+  var name = parts[0] || 'home';
+  setLeftBtn('gear');
+  if (name === 's' && parts[1]){
+    renderStock(decodeURIComponent(parts[1]));
+    setTab('');
+    setLeftBtn('back');
+  }
+  else if (name === 'div'){ renderDiv(); setTab('div'); }
   else if (name === 'led'){ renderLed(); setTab('led'); }
   else if (name === 'me'){ renderMe(); setTab('me'); }
   else { renderHome(); setTab('home'); }
@@ -866,11 +1464,15 @@ function route(){
 /* ============ 初始化 ============ */
 function boot(){
   loadCfg();
-  $('fab').onclick = openSheet;
+  state.curHash = location.hash || '#/home';
+  $('fab').onclick = function(){ openSheet(); };
   $('btnClose').onclick = closeSheet;
   $('btnSubmit').onclick = submitForm;
   $('btnRefreshIcon').onclick = function(){ toast('刷新中...'); refreshData(); };
-  $('btnSetupIcon').onclick = function(){ location.hash = '#/me'; renderMe(); setupOpen = true; renderMe(); };
+  $('btnSetupIcon').onclick = function(){
+    if (this._mode === 'back') { goBack(); return; }
+    location.hash = '#/me'; renderMe(); setupOpen = true; renderMe();
+  };
   document.querySelectorAll('#segMode button').forEach(function(b){
     b.onclick = function(){ setMode(b.getAttribute('data-mode')); };
   });
@@ -880,16 +1482,31 @@ function boot(){
   ['fShares','fPrice','fStock','fNewCode','fNewName'].forEach(function(id){
     var el = $(id); if (el) el.addEventListener('input', updateFee);
   });
+  // 修正面板
+  $('btnEditClose').onclick = closeEdit;
+  $('btnEditSave').onclick = saveEdit;
+  $('btnEditDel').onclick = deleteEdit;
+  $('btnEditCancel').onclick = cancelPendingTrade;
+  document.querySelectorAll('#segEType button').forEach(function(b){
+    b.onclick = function(){ setEType(b.getAttribute('data-et')); };
+  });
+  ['eShares','ePrice'].forEach(function(id){
+    var el = $(id); if (el) el.addEventListener('input', updateEditFee);
+  });
   window.addEventListener('hashchange', route);
   if (cfgReady(cfg)) refreshData(); else { route(); renderMe(); setupOpen = true; renderMe(); }
+  setTimeout(checkNewVersion, 1200);
 }
 document.addEventListener('DOMContentLoaded', boot);
 
 /* 供测试使用 */
 window.__app = {
-  computeFee: computeFee, newId: newId, submitTrade: submitTrade, loadCfg: loadCfg,
-  ghRepo: ghRepo, normCode: normCode, applySnapshot: applySnapshot, state: state,
-  renderHome: renderHome, renderDiv: renderDiv, renderLed: renderLed, renderMe: renderMe
+  computeFee: computeFee, newId: newId, submitTrade: submitTrade, pushQueue: pushQueue,
+  loadCfg: loadCfg, ghRepo: ghRepo, normCode: normCode, applySnapshot: applySnapshot, state: state,
+  renderHome: renderHome, renderDiv: renderDiv, renderLed: renderLed, renderMe: renderMe,
+  renderStock: renderStock, route: route, openEditLedger: openEditLedger, openEditPending: openEditPending,
+  targetOf: targetOf, pendingTrades: pendingTrades, findStock: findStock, ledgerOf: ledgerOf,
+  saveEdit: saveEdit, deleteEdit: deleteEdit, cancelPendingTrade: cancelPendingTrade, setEType: setEType
 };
 })();
 </script>
